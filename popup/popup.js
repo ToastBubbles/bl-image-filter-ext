@@ -1,30 +1,51 @@
-const toggle = document.getElementById("toggle");
+const toggleEnabled = document.getElementById("toggle");
+const speedyMode = document.getElementById("speedyMode");
 const status = document.getElementById("status");
 
-// Load saved state
-browser.storage.local.get("enabled").then(result => {
-  const enabled = result.enabled ?? true; // default ON
-  toggle.checked = enabled;
-  updateStatus(enabled);
+// Load state
+browser.storage.local.get(["enabled", "mode"]).then(result => {
+    const enabled = result.enabled ?? true;
+    const mode = result.mode ?? "grey";
+
+    browser.storage.local.set({ enabled, mode });
+
+    toggleEnabled.checked = enabled;
+    speedyMode.checked = mode === "speedy";
+
+    updateStatus(enabled, mode);
 });
 
-// When toggled
-toggle.addEventListener("change", () => {
-  const enabled = toggle.checked;
+// Enabled toggle
+toggleEnabled.addEventListener("change", () => {
+    browser.storage.local.set({ enabled: toggleEnabled.checked });
 
-  browser.storage.local.set({ enabled });
+    sendUpdate();
+});
 
-  updateStatus(enabled);
+// Speedy toggle
+speedyMode.addEventListener("change", () => {
+    const mode = speedyMode.checked ? "speedy" : "grey";
 
-  // Notify content script
-  browser.tabs.query({ active: true, currentWindow: true }).then(tabs => {
-    browser.tabs.sendMessage(tabs[0].id, {
-      type: "TOGGLE_FILTER",
-      enabled
+    browser.storage.local.set({ mode });
+
+    sendUpdate();
+});
+
+function sendUpdate() {
+    browser.storage.local.get(["enabled", "mode"]).then(result => {
+        browser.tabs.query({ active: true, currentWindow: true }).then(tabs => {
+            browser.tabs.sendMessage(tabs[0].id, {
+                type: "UPDATE_SETTINGS",
+                enabled: result.enabled,
+                mode: result.mode
+            });
+        });
     });
-  });
-});
+}
 
-function updateStatus(enabled) {
-  status.textContent = enabled ? "Enabled" : "Disabled";
+function updateStatus(enabled, mode) {
+    status.textContent =
+        !enabled ? "Disabled" :
+            mode === "speedy" ? "Speedy mode ON" :
+                "Grey mode ON";
 }

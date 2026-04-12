@@ -1,11 +1,14 @@
 console.log("BrickLink filter running...");
 
 let enabled = true;
+let mode = "grey";
 
 // Load saved state and run filter if enabled
 async function initialize() {
-    const result = await browser.storage.local.get("enabled");
+    const result = await browser.storage.local.get(["enabled", "mode"]);
+
     enabled = result.enabled ?? true;
+    mode = result.mode ?? "grey";
 
     console.log("Filter initialized with enabled =", enabled);
 
@@ -19,19 +22,30 @@ initialize();
 
 // Listen for toggle from popup
 browser.runtime.onMessage.addListener((message) => {
-    if (message.type === "TOGGLE_FILTER") {
-        enabled = message.enabled;
-        console.log("Toggle received, enabled =", enabled);
+    if (message.type === "UPDATE_SETTINGS") {
+        browser.storage.local.get(["enabled", "mode"]).then(result => {
+            enabled = result.enabled ?? true;
+            mode = result.mode ?? "grey";
 
-        if (enabled) {
-            filterAll();           // re-apply to current items
-        } else {
-            // Remove the hiding class
-            document.querySelectorAll(".bl-stock-image")
-                .forEach(el => el.classList.remove("bl-stock-image"));
-        }
+            console.log("Updated settings:", enabled, mode);
+
+            refreshAll();
+        });
     }
 });
+
+function refreshAll() {
+    document
+        .querySelectorAll("article.item.component.table-row")
+        .forEach(item => {
+            item.classList.remove("bl-stock-image");
+            item.classList.remove("special-image");
+        });
+
+    if (enabled) {
+        filterAll();
+    }
+}
 
 // Your existing helper functions
 function isStockImage(src) {
@@ -47,8 +61,21 @@ function processItem(item) {
     let src = img.getAttribute("src") || img.getAttribute("data-src") || "";  // sometimes images use data-src
     if (src.startsWith("//")) src = "https:" + src;
 
+    // if (isStockImage(src)) {
+    //     if (mode == 'speedy')
+    //         item.classList.add("bl-stock-image");
+    // } else {
+    //     item.classList.add("special-image");
+    // }
     if (isStockImage(src)) {
-        item.classList.add("bl-stock-image");
+        if (mode === "speedy") {
+            item.remove();
+            return;
+        }
+
+
+    } else {
+        item.classList.add("special-image");
     }
 }
 

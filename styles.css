@@ -1,0 +1,7 @@
+.bl-stock-image {
+  /* opacity: 0.35; */
+  /* filter: grayscale(100%); */
+  transition: all 0.5s ease;
+  background-color: rgb(250, 157, 157);
+  background: rgb(250, 157, 157) !important;
+}

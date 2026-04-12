@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "BrickLink Image Filter",
+  "version": "1.0",
+
+  "permissions": ["storage"],
+
+  "host_permissions": [
+    "*://store.bricklink.com/*"
+  ],
+
+  "action": {
+    "default_popup": "popup/popup.html"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["*://store.bricklink.com/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ]
+}

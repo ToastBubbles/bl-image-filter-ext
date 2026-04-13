@@ -1,16 +1,25 @@
 const toggleEnabled = document.getElementById("toggle");
 const speedyMode = document.getElementById("speedyMode");
 const status = document.getElementById("status");
+const hideKnownToggle = document.getElementById("hideKnown");
+
+hideKnownToggle.addEventListener("change", () => {
+    browser.storage.local.set({ hideKnown: hideKnownToggle.checked });
+    sendUpdate();
+});
+
 
 // Load state
-browser.storage.local.get(["enabled", "mode"]).then(result => {
+browser.storage.local.get(["enabled", "mode", "hideKnown"]).then(result => {
     const enabled = result.enabled ?? true;
     const mode = result.mode ?? "grey";
+    const hideKnown = result.hideKnown ?? false;
 
-    browser.storage.local.set({ enabled, mode });
+    browser.storage.local.set({ enabled, mode, hideKnown });
 
     toggleEnabled.checked = enabled;
     speedyMode.checked = mode === "speedy";
+    hideKnownToggle.checked = hideKnown;
 
     updateStatus(enabled, mode);
 });
@@ -37,7 +46,8 @@ function sendUpdate() {
             browser.tabs.sendMessage(tabs[0].id, {
                 type: "UPDATE_SETTINGS",
                 enabled: result.enabled,
-                mode: result.mode
+                mode: result.mode,
+                hideKnown: result.hideKnown
             });
         });
     });

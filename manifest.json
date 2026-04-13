@@ -6,7 +6,7 @@
   "permissions": ["storage"],
 
   "host_permissions": [
-    "*://store.bricklink.com/*"
+    "*://*.bricklink.com/*"
   ],
 
   "action": {
@@ -16,7 +16,12 @@
   "content_scripts": [
     {
       "matches": ["*://store.bricklink.com/*"],
-      "js": ["content.js"],
+      "js": ["store.js"],
+      "css": ["styles.css"]
+    },
+    {
+      "matches": ["*://www.bricklink.com/*"],
+      "js": ["catalog.js"],
       "css": ["styles.css"]
     }
   ]
